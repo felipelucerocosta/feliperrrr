@@ -85,7 +85,10 @@ def crear_cliente_groq():
 
 def inicializar_estado_chat():
     if "mensajes" not in st.session_state:
-        st.session_state.mensajes = []
+        # Inicializamos con un mensaje sistema para mejor contexto
+        st.session_state.mensajes = [
+            {"role": "system", "content": "Eres un asistente AI útil y amable."}
+        ]
 
 def obtener_mensajes_previos():
     for mensaje in st.session_state.mensajes:
@@ -99,14 +102,17 @@ def mostrar_mensaje(role, content):
     with st.chat_message(role):
         st.markdown(content)
 
-# ✅ ESTA ES LA FUNCIÓN QUE PROVOCABA EL ERROR, DEBE IR ANTES DE USARSE
 def obtener_respuesta_modelo(cliente, modelo, mensajes):
-    respuesta = cliente.chat.completions.create(
-        model=modelo,
-        messages=mensajes,
-        stream=False
-    )
-    return respuesta.choices[0].message.content
+    try:
+        respuesta = cliente.chat.completions.create(
+            model=modelo,
+            messages=mensajes,
+            stream=False
+        )
+        return respuesta.choices[0].message.content
+    except Exception as e:
+        st.error(f"Error al obtener respuesta del modelo: {e}")
+        return "Lo siento, ocurrió un error al procesar tu solicitud."
 
 # ----- EJECUCIÓN PRINCIPAL -----
 def ejecutar_chat():
@@ -126,3 +132,5 @@ def ejecutar_chat():
 # ----- INICIO DE LA APP -----
 if __name__ == '__main__':
     ejecutar_chat()
+
+
